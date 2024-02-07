@@ -1,7 +1,3 @@
-'''
-Run module_inference_script.py first. This script accepts the inferred module dynamics.
-'''
-
 import matplotlib.pyplot as plt
 from numpy import arange
 from pandas import DataFrame, read_csv
@@ -207,5 +203,6 @@ def main():
         plt.close()
     print('done')
 
+# main code
 if __name__ == '__main__':
     main()
