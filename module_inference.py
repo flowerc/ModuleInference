@@ -7,7 +7,6 @@ from scipy.cluster.hierarchy import distance, fcluster, linkage
 from scipy.stats import fisher_exact, rankdata
 import seaborn as sns
 from string import ascii_uppercase
-
 # plot formatting
 sns.set(font_scale=1.5)
 mpl.style.use('default')
@@ -399,5 +398,6 @@ def main():
     df_module_error.to_csv('RNA_module_error.csv')
     df_rep.to_csv('geneset_representation_stats_RNA.csv', index=False)
 
+# main code
 if __name__ == '__main__':
     main()
