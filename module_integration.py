@@ -197,7 +197,7 @@ def main():
         plt.annotate('\nVEM off', xy=((9+0.4)/xaxis_length, 1.05), xycoords='axes fraction', ha='left', va='center', fontsize=10, color='k', weight='bold')
         r = df_stats[(df_stats['Phospho Module'] == m_phos) & (df_stats['RNA Module'] == m_RNA)]['Pearson Correlation'].values[0]
         p = df_stats[(df_stats['Phospho Module'] == m_phos) & (df_stats['RNA Module'] == m_RNA)]['Corrected p-value (FDR)'].values[0]
-        plt.annotate(r'$r^{2}='+str(round(r**2,2)) + '$', xy=(1.03,0.15), xycoords='axes fraction', ha='left', va='center', fontsize=8, color='k')
+        plt.annotate(r'$r = {:0.2f}$'.format(r), xy=(1.03,0.15), xycoords='axes fraction', ha='left', va='center', fontsize=8, color='k')
         plt.annotate(r'$P = {:0.3f}$'.format(p), xy=(1.03,0.05), xycoords='axes fraction', ha='left', va='center', fontsize=8, color='k')
         plt.savefig('dynamics_coplot_' + m_phos + m_RNA + '.png', dpi=400, bbox_inches='tight')
         plt.close()
