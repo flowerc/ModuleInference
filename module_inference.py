@@ -147,46 +147,45 @@ def main():
     }
     
     # before performing gene set overrepresentation analysis in the following loop,
-    # get gene background from the data (all genes in the dataset)
-    background = list(df_modules['Site'])
-    background = [g.split('; ')[0].split('-p')[0] for g in background]
-    background = sorted(list(set(background)))
+    # get gene background from the data (all sites in the dataset that map uniquely to one gene)
+    background = set([s for s in df_modules['Site'] if ';' not in s])
     
-    # perform gene set representation analysis
-    print('gene set representation analysis:')
+    # perform phosphosite-set representation analysis
+    print('phosphosite-set representation analysis:')
     df_rep_list = []
     for lib in libraries:
         lib_name_reformat = lib_title_map[lib]
-        lib_filename = 'gene_set_libraries\\' + lib + '.gmt'
+        lib_filename = 'libraries\\' + lib + '.gmt'
         for m in df_modules['Module'].unique():
             print('library: ' + lib_name_reformat + '\tphos module: ' + m + ' ... ', end='')
-            # get query gene list from the module
-            gene_list = list(df_modules[df_modules['Module'] == m]['Site'])
-            gene_list = [g.split('; ')[0].split('-p')[0] for g in gene_list]
-            gene_list = sorted(list(set(gene_list)))
+            # get foreground (all sites in the module that map uniquely to one gene)
+            foreground = list(df_modules[df_modules['Module'] == m]['Site'])
+            foreground = set([s for s in foreground if ';' not in s])
             
-            module_list, lib_list, gene_set_name_list, OR_list, p_list, overlap_list, overlap_genes_list = [], [], [], [], [], [], []
+            module_list, lib_list, gene_set_name_list, OR_list, p_list, overlap_list, overlap_IDs_list = [], [], [], [], [], [], []
             with open(lib_filename) as file:
                 for line in file:
                     line_list = line.rstrip().split('\t')
-                    gene_set_name = line_list[0]
-                    gene_set = line_list[2:]
-                    if len(set(gene_set).intersection(set(background))) == 0: continue
-                    # perform two-sided Fisher's exact test
+                    query_set_name = line_list[0]
+                    query_set = line_list[2:]
+                    query_set = [s for s in background if s.split('-p')[0] in query_set]
+                    query_set = set(query_set).intersection(background)
+                    if len(query_set) == 0: continue
+                    # perform one-sided Fisher's exact test
                     M = len(background)
-                    n = len(list(set(background).intersection(set(gene_set))))
-                    N = len(gene_list)
-                    overlap_genes = sorted(list(set(gene_list).intersection(set(gene_set))))
-                    k = len(overlap_genes)
+                    n = len(query_set)
+                    N = len(foreground)
+                    overlap = sorted(list(foreground.intersection(query_set)))
+                    k = len(overlap)
                     table = array([[k, n-k], [N-k, M-(n+N)+k]])
-                    odds_ratio, p = fisher_exact(table, alternative='two-sided')
-                    gene_set_name_list.append(gene_set_name)
+                    odds_ratio, p = fisher_exact(table, alternative='greater')
+                    gene_set_name_list.append(query_set_name)
                     OR_list.append(odds_ratio)
                     p_list.append(p)
                     module_list.append(m)
                     lib_list.append(lib_name_reformat)
                     overlap_list.append("'" + str(k) + '/' + str(n) + "'")
-                    overlap_genes_list.append('; '.join(overlap_genes))
+                    overlap_IDs_list.append('; '.join(overlap))
             
             # adjusted p-values by BH procedure.
             pval_rank = rankdata(p_list)
@@ -202,7 +201,7 @@ def main():
             df_rep['Library'] = lib_list
             df_rep['Gene Set'] = gene_set_name_list
             df_rep['Overlap'] = overlap_list
-            df_rep['Genes'] = overlap_genes_list
+            df_rep['Sites'] = overlap_genes_list
             df_rep['Odds Ratio'] = OR_list
             df_rep['P-value'] = p_list
             df_rep['Corrected p-value'] = FDR_list
@@ -326,43 +325,42 @@ def main():
     
     # before performing gene set representation analysis in the following loop,
     # get gene background from the data (all genes in the dataset)
-    background = list(df_modules['Gene ID'])
-    background = sorted(list(set(background)))
+    background = set(df_modules['Gene ID'])
     
     # perform gene set representation analysis
     print('gene set representation analysis:')
     df_rep_list = []
     for lib in libraries:
         lib_name_reformat = lib_title_map[lib]
-        lib_filename = 'gene_set_libraries\\' + lib + '.gmt'
+        lib_filename = 'libraries\\' + lib + '.gmt'
         for m in df_modules['Module'].unique():
             print('library: ' + lib_name_reformat + '\tRNA module: ' + m + ' ... ', end='')
             # get query gene list from the module
-            gene_list = list(df_modules[df_modules['Module'] == m]['Gene ID'])
-            gene_list = sorted(list(set(gene_list)))
+            foreground = set(df_modules[df_modules['Module'] == m]['Gene ID'])
             
-            module_list, lib_list, gene_set_name_list, OR_list, p_list, overlap_list, overlap_genes_list = [], [], [], [], [], [], []
+            module_list, lib_list, gene_set_name_list, OR_list, p_list, overlap_list, overlap_IDs_list = [], [], [], [], [], [], []
             with open(lib_filename) as file:
                 for line in file:
                     line_list = line.rstrip().split('\t')
-                    gene_set_name = line_list[0]
-                    gene_set = line_list[2:]
-                    if len(set(gene_set).intersection(set(background))) == 0: continue
-                    # perform two-sided Fisher's exact test
+                    query_set_name = line_list[0]
+                    query_set = line_list[2:]
+                    query_set = set(query_set).intersection(background)
+                    if len(query_set) == 0: continue
+                    # perform one-sided Fisher's exact test
                     M = len(background)
-                    n = len(list(set(background).intersection(set(gene_set))))
-                    N = len(gene_list)
-                    overlap_genes = sorted(list(set(gene_list).intersection(set(gene_set))))
-                    k = len(overlap_genes)
+                    n = len(query_set)
+                    N = len(foreground)
+                    overlap = sorted(list(foreground.intersection(query_set)))
+                    k = len(overlap)
                     table = array([[k, n-k], [N-k, M-(n+N)+k]])
-                    odds_ratio, p = fisher_exact(table, alternative='two-sided')
-                    gene_set_name_list.append(gene_set_name)
+                    odds_ratio, p = fisher_exact(table, alternative='greater')
+                    gene_set_name_list.append(query_set_name)
                     OR_list.append(odds_ratio)
                     p_list.append(p)
                     module_list.append(m)
                     lib_list.append(lib_name_reformat)
                     overlap_list.append("'" + str(k) + '/' + str(n) + "'")
-                    overlap_genes_list.append('; '.join(overlap_genes))
+                    overlap_IDs_list.append('; '.join(overlap))
             
             # adjusted p-values by BH procedure.
             pval_rank = rankdata(p_list)
